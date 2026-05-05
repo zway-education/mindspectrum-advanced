@@ -190,6 +190,11 @@ input,textarea{-webkit-user-select:auto;user-select:auto}
 }
 .form-label .req{color:var(--c-red);margin-left:3px}
 .form-label .opt{color:var(--text-light);font-weight:500;letter-spacing:0.02em;text-transform:none;margin-left:6px}
+.form-label .hint{
+  display:block;font-size:10.5px;font-weight:500;
+  color:var(--text-light);letter-spacing:0.02em;
+  text-transform:none;margin-top:3px;font-style:italic;
+}
 .input-wrap{position:relative}
 .input-icon{
   position:absolute;left:14px;top:50%;transform:translateY(-50%);
@@ -686,7 +691,7 @@ function Home({onStart}){
             }}>II</div>
             <div>
               <div style={{fontSize:13,fontWeight:700,color:'var(--ink)',marginBottom:2}}>所需時間</div>
-              <div style={{fontSize:13,color:'var(--text-mid)',lineHeight:1.6}}>約 5–7 分鐘・誠實作答能獲得更精準的結果</div>
+              <div style={{fontSize:13,color:'var(--text-mid)',lineHeight:1.6}}>約 3 分鐘・誠實作答能獲得更精準的結果</div>
             </div>
           </div>
         </div>
@@ -710,8 +715,19 @@ function Home({onStart}){
 }
 
 /* ============== 2. 註冊頁 ============== */
-function Register({form, setForm, onNext, onBack}){
+function Register({form, setForm, onNext, onBack, onEngineer}){
   const [err, setErr] = useState({});
+  const [showEng, setShowEng] = useState(false);
+  const [engPwd, setEngPwd] = useState('');
+
+  const runEng = ()=>{
+    if(engPwd === '63811'){
+      setShowEng(false); setEngPwd('');
+      onEngineer && onEngineer();
+    } else {
+      setShowEng(false); setEngPwd('');
+    }
+  };
 
   const submit = (e)=>{
     e.preventDefault();
@@ -719,6 +735,7 @@ function Register({form, setForm, onNext, onBack}){
     if(!form.name.trim()) ne.name = '請填寫您的姓名';
     if(!form.email.trim() || !validEmail(form.email)) ne.email = '請填寫正確的 Email 格式';
     if(!form.phone || !validPhone(form.phone)) ne.phone = '請填寫正確的手機號碼（如 0912345678）';
+    if(!form.childAge) ne.childAge = '請選擇孩子的年齡層';
     setErr(ne);
     if(Object.keys(ne).length===0) onNext();
   };
@@ -742,7 +759,10 @@ function Register({form, setForm, onNext, onBack}){
             </div>
 
             <div className="form-row">
-              <label className="form-label">您的姓名<span className="req">*</span></label>
+              <label className="form-label">
+                您的姓名<span className="req">*</span>
+                <span className="hint">將作為查詢過往紀錄使用</span>
+              </label>
               <div className="input-wrap">
                 <span className="input-icon">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -754,7 +774,10 @@ function Register({form, setForm, onNext, onBack}){
             </div>
 
             <div className="form-row">
-              <label className="form-label">電子郵件<span className="req">*</span></label>
+              <label className="form-label">
+                電子郵件<span className="req">*</span>
+                <span className="hint">將作為查詢過往紀錄使用</span>
+              </label>
               <div className="input-wrap">
                 <span className="input-icon">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
@@ -778,20 +801,21 @@ function Register({form, setForm, onNext, onBack}){
             </div>
 
             <div className="form-row" style={{marginBottom:22}}>
-              <label className="form-label">孩子的年齡<span className="opt">（選填）</span></label>
+              <label className="form-label">孩子的年齡<span className="req">*</span></label>
               <div className="age-grid">
                 {AGE_GROUPS.map(ag=>{
                   const sel = form.childAge === ag.key;
                   return (
                     <button key={ag.key} type="button"
                       className={"age-btn"+(sel?" sel":"")}
-                      onClick={()=>setForm({...form, childAge: sel ? null : ag.key})}>
+                      onClick={()=>setForm({...form, childAge: ag.key})}>
                       <div className="age-label">{ag.label}</div>
                       <div className="age-sub">{ag.sublabel}</div>
                     </button>
                   );
                 })}
               </div>
+              {err.childAge && <div className="error-msg">{err.childAge}</div>}
             </div>
 
             <button type="submit" className="btn-primary">
@@ -810,6 +834,45 @@ function Register({form, setForm, onNext, onBack}){
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="m15 18-6-6 6-6"/></svg>
           返回首頁
         </button>
+
+        {/* 工程師模式入口（極小、低調） */}
+        <div style={{textAlign:'center',marginTop:14}}>
+          <button onClick={()=>setShowEng(true)}
+            style={{fontSize:10,color:'var(--line)',background:'none',border:'none',cursor:'pointer',letterSpacing:'0.1em'}}>
+            · engineer ·
+          </button>
+        </div>
+
+        {/* 工程師密碼 modal */}
+        {showEng && (
+          <div style={{position:'fixed',inset:0,background:'rgba(15,14,26,0.78)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:99,padding:20}}
+               onClick={()=>{setShowEng(false);setEngPwd('');}}>
+            <div className="card pop-in" style={{maxWidth:320,width:'100%',padding:'28px 24px'}} onClick={e=>e.stopPropagation()}>
+              <div style={{
+                fontFamily:'"Cormorant Garamond",serif',fontStyle:'italic',
+                fontSize:13,letterSpacing:'0.18em',color:'var(--gold-deep)',
+                textTransform:'uppercase',textAlign:'center',marginBottom:6,
+              }}>Engineer Mode</div>
+              <div style={{fontSize:16,fontWeight:800,color:'var(--ink)',textAlign:'center',marginBottom:18,fontFamily:'"Noto Serif TC",serif'}}>
+                工程師測試模式
+              </div>
+              <input type="password" autoFocus
+                className="input-field"
+                style={{paddingLeft:14,textAlign:'center',letterSpacing:'0.4em',fontSize:18,fontWeight:700}}
+                placeholder="密碼"
+                value={engPwd}
+                onChange={e=>setEngPwd(e.target.value)}
+                onKeyDown={e=>{ if(e.key==='Enter') runEng(); }}/>
+              <button onClick={runEng} className="btn-primary" style={{marginTop:14,fontSize:14}}>
+                生成測試資料
+                <span className="gold-line"></span>
+              </button>
+              <div style={{fontSize:11,color:'var(--text-light)',textAlign:'center',marginTop:12,letterSpacing:'0.05em'}}>
+                自動填入測試資料並產生隨機光譜結果
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </Shell>
   );
@@ -866,9 +929,9 @@ function Quiz({answers, setAnswers, onFinish, onBack}){
 
         <div className={"card gold-edge "+(direction==='forward'?'slide-in':'slide-out')} style={{position:'relative',padding:'28px 24px 22px',minHeight:170}}>
           <div className="q-num">{qNum}</div>
-          <div className="q-tag" style={{color:info.colorD}}>
-            <span className="bullet" style={{background:info.color}}></span>
-            觀察向度：{info.name.split('・')[1]}
+          <div className="q-tag">
+            <span className="bullet"></span>
+            Section {['I','II','III','IV'][Math.floor(qIdx/6)]} · 第 {qIdx+1} 題
           </div>
           <div className="q-text">{q}</div>
         </div>
@@ -1176,7 +1239,43 @@ function App(){
   if(step==='register'){
     return <Register form={form} setForm={setForm}
       onNext={()=>setStep('quiz')}
-      onBack={()=>setStep('home')}/>;
+      onBack={()=>setStep('home')}
+      onEngineer={()=>{
+        // 工程師模式 63811：自動填入測試資料 + 隨機答題 + 直接跳結果頁
+        const rid = Math.floor(Math.random()*9000)+1000;
+        const ages = ['0-3','4-6','7-12','teen'];
+        const randAnswers = Array(QUESTIONS.length).fill(0).map(()=>Math.ceil(Math.random()*5));
+        const testForm = {
+          name: `測試員_${rid}`,
+          email: `test${rid}@example.com`,
+          phone: '0900000000',
+          childAge: ages[Math.floor(Math.random()*ages.length)],
+          bot: '',
+        };
+        setForm(testForm);
+        setAnswers(randAnswers);
+        setStep('result');
+        window.scrollTo(0,0);
+        // 也送資料到 sheet（如不需要可註解）
+        setTimeout(()=>{
+          const { sum, primary } = calcResult(randAnswers);
+          const totalScore = sum.red+sum.orange+sum.green+sum.blue;
+          const sheetData = {
+            nickname: testForm.name, identity: IDENTITY_TAG+'(ENG)',
+            email: testForm.email, phone: testForm.phone, childAge: testForm.childAge,
+            session:'無', parentCheck:'已確認',
+            totalScore, red:sum.red, orange:sum.orange, green:sum.green, blue:sum.blue,
+            primaryType: primary, primaryLabel: TYPE_INFO[primary].name,
+            answers: randAnswers.reduce((acc,v,i)=>{acc[i+1]=v;return acc;},{}),
+            uid, sheetId: TARGET_SHEET_ID, sheetUrl: TARGET_SHEET_URL,
+            version: QUIZ_VERSION+' [engineer]',
+            submittedAt: new Date().toISOString(),
+          };
+          setSubmitState('sending');
+          fetch(GOOGLE_SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(sheetData)})
+            .then(()=>setSubmitState('ok')).catch(()=>setSubmitState('fail'));
+        },200);
+      }}/>;
   }
   if(step==='quiz'){
     return <Quiz
