@@ -1,0 +1,1208 @@
+<!-- 心智光譜測驗 進階版・家長眼中的孩子 v1.1 -->
+<!-- 參考基礎版 index.html 架構：home → register → quiz → result，附帶 lookup 與資料回送 Google Sheet -->
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>心智光譜測驗・進階版｜家長眼中的孩子</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;600;700;900&family=Noto+Sans+TC:wght@400;500;700;900&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<style>
+:root{
+  --ink:#0F0E1A;
+  --ink-soft:#1F1B3A;
+  --paper:#FAF6EE;
+  --paper-warm:#F4ECDC;
+  --paper-deep:#EFE5D0;
+  --cream:#FFFCF5;
+  --line:#E5DCC6;
+  --line-soft:#EFE7D2;
+  --gold:#B8935A;
+  --gold-deep:#8E6B3C;
+  --gold-pale:#F5EBD6;
+  --text:#1F1B3A;
+  --text-mid:#5A5468;
+  --text-light:#8B8499;
+
+  --c-red:    #B83A2E;
+  --c-red-d:  #7E2118;
+  --c-red-p:  #FBEEEB;
+  --c-orange: #C66416;
+  --c-orange-d:#8C420A;
+  --c-orange-p:#FBF0E2;
+  --c-green:  #2E7A4D;
+  --c-green-d:#1A5232;
+  --c-green-p:#E8F2EB;
+  --c-blue:   #2C5C8E;
+  --c-blue-d: #173E66;
+  --c-blue-p: #E7EEF7;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:"Noto Sans TC","Inter",-apple-system,BlinkMacSystemFont,"PingFang TC","Microsoft JhengHei",sans-serif;
+  color:var(--text);
+  background:var(--paper);
+  -webkit-user-select:none;user-select:none;
+  -webkit-font-smoothing:antialiased;
+  letter-spacing:0.01em;
+}
+input,textarea{-webkit-user-select:auto;user-select:auto}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideOut{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes scaleIn{from{opacity:0;transform:scale(0.92)}to{opacity:1;transform:scale(1)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes popIn{0%{opacity:0;transform:scale(0.85)}70%{transform:scale(1.02)}100%{opacity:1;transform:scale(1)}}
+
+.fade-up{animation:fadeUp .55s cubic-bezier(.22,.68,0,1.05) both}
+.fade-in{animation:fadeIn .45s ease both}
+.slide-in{animation:slideIn .35s cubic-bezier(.22,.68,0,1.1) both}
+.slide-out{animation:slideOut .35s cubic-bezier(.22,.68,0,1.1) both}
+.scale-in{animation:scaleIn .45s cubic-bezier(.22,.68,0,1.15) both}
+.pop-in{animation:popIn .4s cubic-bezier(.22,.68,0,1.2) both}
+
+.page{
+  min-height:100vh;width:100%;
+  display:flex;flex-direction:column;align-items:center;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(184,147,90,0.08), transparent 50%),
+    radial-gradient(circle at 80% 100%, rgba(31,27,58,0.05), transparent 50%),
+    var(--paper);
+}
+.content{
+  width:100%;max-width:520px;padding:28px 22px 80px;flex:1;
+  position:relative;z-index:1;
+}
+
+.lux-header{
+  width:100%;
+  background:linear-gradient(180deg, var(--cream) 0%, var(--paper) 100%);
+  padding:30px 24px 22px;
+  text-align:center;
+  position:relative;
+  border-bottom:1px solid var(--line-soft);
+}
+.lux-strip{
+  display:flex;width:100%;height:3px;
+  position:absolute;top:0;left:0;
+  background:linear-gradient(90deg, var(--c-red) 0%, var(--c-red) 25%, var(--c-orange) 25%, var(--c-orange) 50%, var(--c-green) 50%, var(--c-green) 75%, var(--c-blue) 75%, var(--c-blue) 100%);
+  opacity:0.85;
+}
+.lux-eyebrow{
+  font-family:"Cormorant Garamond","Noto Serif TC",serif;
+  font-style:italic;font-weight:500;
+  font-size:13px;letter-spacing:0.18em;
+  color:var(--gold-deep);
+  text-transform:uppercase;
+}
+.lux-eyebrow .dot{display:inline-block;width:4px;height:4px;border-radius:50%;background:var(--gold);margin:0 10px;vertical-align:middle}
+.lux-title{
+  font-family:"Noto Serif TC",serif;
+  font-weight:900;
+  font-size:28px;line-height:1.25;
+  color:var(--ink);
+  margin-top:8px;letter-spacing:0.02em;
+}
+.lux-subtitle{
+  font-size:13px;color:var(--text-mid);
+  margin-top:8px;font-weight:500;letter-spacing:0.05em;
+}
+.lux-divider{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  margin:14px auto 4px;
+}
+.lux-divider .line{height:1px;width:36px;background:var(--gold)}
+.lux-divider .diamond{width:6px;height:6px;background:var(--gold);transform:rotate(45deg)}
+
+.card{
+  background:var(--cream);
+  border-radius:20px;
+  padding:24px 22px;
+  margin-bottom:14px;
+  border:1px solid var(--line);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.8) inset,
+    0 12px 32px -16px rgba(31,27,58,0.12),
+    0 2px 6px -2px rgba(31,27,58,0.06);
+  position:relative;
+}
+.card.gold-edge::before{
+  content:'';position:absolute;left:0;top:0;width:3px;height:100%;
+  background:linear-gradient(180deg, var(--gold) 0%, transparent 100%);
+  border-radius:20px 0 0 20px;
+}
+
+.btn-primary{
+  width:100%;
+  background:linear-gradient(135deg, var(--ink) 0%, var(--ink-soft) 100%);
+  color:var(--cream);
+  border:none;border-radius:14px;
+  padding:17px;font-size:15px;font-weight:700;
+  letter-spacing:0.08em;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  transition:all .25s cubic-bezier(.22,.68,0,1.1);
+  box-shadow:0 8px 20px -8px rgba(31,27,58,0.4),0 2px 6px -2px rgba(31,27,58,0.2);
+  position:relative;overflow:hidden;
+}
+.btn-primary::after{
+  content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent);
+  transition:left .6s;
+}
+.btn-primary:hover::after{left:100%}
+.btn-primary:active{transform:scale(0.98)}
+.btn-primary:disabled{opacity:.55;cursor:not-allowed}
+.btn-primary .gold-line{
+  position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+  width:40%;height:1px;background:var(--gold);opacity:0.7;
+}
+
+.btn-ghost{
+  background:transparent;border:1px solid var(--line);
+  color:var(--text-mid);border-radius:12px;padding:13px 18px;
+  font-size:13px;font-weight:600;letter-spacing:0.05em;
+  cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  transition:all .2s;width:100%;
+}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold-deep)}
+.btn-ghost:active{transform:scale(0.97)}
+
+/* Form fields */
+.form-row{margin-bottom:14px}
+.form-label{
+  font-size:11.5px;font-weight:700;color:var(--gold-deep);
+  letter-spacing:0.18em;text-transform:uppercase;
+  margin-bottom:8px;display:block;
+}
+.form-label .req{color:var(--c-red);margin-left:3px}
+.form-label .opt{color:var(--text-light);font-weight:500;letter-spacing:0.02em;text-transform:none;margin-left:6px}
+.input-wrap{position:relative}
+.input-icon{
+  position:absolute;left:14px;top:50%;transform:translateY(-50%);
+  color:var(--text-light);
+  pointer-events:none;
+}
+.input-field{
+  width:100%;
+  padding:14px 14px 14px 42px;
+  font-size:15px;
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:12px;
+  outline:none;color:var(--text);
+  transition:all .2s;
+  font-family:inherit;
+}
+.input-field:focus{
+  border-color:var(--gold);
+  background:var(--cream);
+  box-shadow:0 0 0 3px rgba(184,147,90,0.15);
+}
+.error-msg{font-size:12px;color:var(--c-red);margin-top:6px;font-weight:600}
+
+/* Quiz options */
+.opt{
+  width:100%;
+  background:var(--cream);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:16px 18px;
+  margin-bottom:10px;
+  display:flex;justify-content:space-between;align-items:center;
+  cursor:pointer;
+  transition:all .2s cubic-bezier(.22,.68,0,1.05);
+  position:relative;overflow:hidden;
+  text-align:left;
+}
+.opt:hover{
+  border-color:var(--gold);
+  background:var(--gold-pale);
+  transform:translateX(2px);
+}
+.opt:active{transform:scale(0.99)}
+.opt-label{font-size:15px;font-weight:600;color:var(--text)}
+.opt-mark{
+  width:30px;height:30px;border-radius:50%;
+  border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;
+  font-family:"Cormorant Garamond",serif;font-style:italic;
+  font-size:14px;font-weight:600;color:var(--text-mid);
+  background:var(--paper);
+  transition:all .2s;
+  flex-shrink:0;
+}
+.opt:hover .opt-mark{
+  background:var(--gold);color:var(--cream);border-color:var(--gold);
+}
+.opt-5{border-left:3px solid var(--c-red)}
+.opt-4{border-left:3px solid var(--c-orange)}
+.opt-3{border-left:3px solid var(--gold)}
+.opt-2{border-left:3px solid var(--c-blue)}
+.opt-1{border-left:3px solid var(--text-light)}
+
+/* Age group */
+.age-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.age-btn{
+  padding:11px 6px;border-radius:12px;
+  border:1.5px solid var(--line);
+  background:var(--cream);cursor:pointer;
+  transition:all .2s;text-align:center;
+}
+.age-btn.sel{
+  border-color:var(--gold);
+  background:var(--gold-pale);
+  box-shadow:0 4px 12px -4px rgba(184,147,90,0.3);
+}
+.age-label{font-size:13px;font-weight:800;color:var(--text)}
+.age-btn.sel .age-label{color:var(--gold-deep)}
+.age-sub{font-size:10px;color:var(--text-light);margin-top:3px;letter-spacing:0.05em}
+.age-btn.sel .age-sub{color:var(--gold-deep)}
+
+/* Progress */
+.progress-wrap{
+  display:flex;align-items:center;gap:14px;
+  padding:0 4px;margin-bottom:22px;
+}
+.progress-meta{
+  font-family:"Cormorant Garamond",serif;font-style:italic;
+  font-size:14px;color:var(--gold-deep);font-weight:600;
+  letter-spacing:0.05em;white-space:nowrap;
+}
+.progress-track{flex:1;height:3px;background:var(--line);border-radius:2px;overflow:hidden;position:relative}
+.progress-fill{
+  position:absolute;left:0;top:0;height:100%;
+  background:linear-gradient(90deg, var(--gold) 0%, var(--gold-deep) 100%);
+  border-radius:2px;
+  transition:width .5s cubic-bezier(.22,.68,0,1);
+}
+.progress-fill::after{
+  content:'';position:absolute;right:-2px;top:50%;transform:translateY(-50%);
+  width:8px;height:8px;background:var(--gold);border-radius:50%;
+  box-shadow:0 0 8px rgba(184,147,90,0.6);
+}
+
+.q-num{
+  font-family:"Cormorant Garamond",serif;
+  font-size:60px;font-weight:500;font-style:italic;
+  color:var(--gold-pale);
+  line-height:1;letter-spacing:-0.02em;
+  position:absolute;top:18px;right:22px;
+  user-select:none;
+}
+.q-tag{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:11px;font-weight:700;letter-spacing:0.18em;
+  color:var(--gold-deep);
+  text-transform:uppercase;
+  margin-bottom:14px;
+}
+.q-tag .bullet{width:5px;height:5px;border-radius:50%;background:var(--gold)}
+.q-text{
+  font-family:"Noto Serif TC",serif;
+  font-weight:700;
+  font-size:21px;line-height:1.6;
+  color:var(--ink);letter-spacing:0.01em;
+  margin-bottom:18px;
+  position:relative;z-index:1;
+}
+
+/* Result */
+.result-cover{
+  position:relative;
+  background:linear-gradient(180deg, var(--cream) 0%, var(--paper-warm) 100%);
+  border:1px solid var(--line);
+  border-radius:24px;
+  padding:34px 24px 30px;
+  text-align:center;overflow:hidden;
+  box-shadow:0 24px 48px -24px rgba(31,27,58,0.18);
+  margin-bottom:14px;
+}
+.result-cover::before{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(184,147,90,0.12), transparent 40%),
+    radial-gradient(circle at 80% 100%, var(--accent-glow), transparent 40%);
+  pointer-events:none;
+}
+.result-eyebrow{
+  font-family:"Cormorant Garamond",serif;font-style:italic;
+  font-size:13px;letter-spacing:0.22em;
+  color:var(--gold-deep);text-transform:uppercase;
+  position:relative;z-index:1;
+}
+.result-color-name{
+  font-family:"Noto Serif TC",serif;
+  font-weight:900;font-size:32px;line-height:1.2;
+  margin-top:12px;letter-spacing:0.02em;
+  position:relative;z-index:1;
+}
+.result-title{
+  font-family:"Noto Serif TC",serif;
+  font-weight:700;font-size:17px;line-height:1.5;
+  color:var(--ink);
+  margin-top:12px;
+  position:relative;z-index:1;
+}
+.result-tag-row{
+  display:flex;flex-wrap:wrap;justify-content:center;gap:8px;
+  margin-top:16px;position:relative;z-index:1;
+}
+.result-tag{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:5px 11px;border-radius:20px;
+  font-size:11.5px;font-weight:600;letter-spacing:0.05em;
+  background:var(--cream);
+  border:1px solid var(--line);
+  color:var(--text);
+}
+
+.bar-row{margin-bottom:13px;position:relative}
+.bar-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+.bar-name{
+  font-size:13px;font-weight:700;color:var(--text);
+  letter-spacing:0.05em;display:flex;align-items:center;gap:8px;
+}
+.bar-dot{width:8px;height:8px;border-radius:50%}
+.bar-score{
+  font-family:"Cormorant Garamond",serif;font-style:italic;
+  font-size:18px;font-weight:600;color:var(--text);
+}
+.bar-score .max{color:var(--text-light);font-size:13px}
+.bar-track{height:8px;background:var(--paper-deep);border-radius:4px;overflow:hidden;position:relative}
+.bar-fill{
+  height:100%;border-radius:4px;
+  background:linear-gradient(90deg, var(--bar-c1), var(--bar-c2));
+  transition:width 1.2s cubic-bezier(.22,.68,0,1);
+  position:relative;
+}
+.bar-fill::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+  background-size:200% 100%;
+  animation:shimmer 2.5s ease-in-out infinite;
+}
+
+.desc-block{
+  background:var(--cream);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:22px;margin-bottom:14px;
+  position:relative;
+}
+.desc-block .desc-head{
+  font-family:"Noto Serif TC",serif;
+  font-weight:900;font-size:15px;
+  color:var(--ink);margin-bottom:10px;
+  letter-spacing:0.05em;
+  display:flex;align-items:center;gap:8px;
+}
+.desc-block .desc-head::before{
+  content:'';width:18px;height:1px;background:var(--gold);
+}
+.desc-text{font-size:14.5px;line-height:1.85;color:var(--text);letter-spacing:0.02em}
+.desc-text strong{color:var(--ink);font-weight:700}
+
+.advice{
+  background:linear-gradient(180deg, var(--gold-pale) 0%, var(--cream) 100%);
+  border:1px solid rgba(184,147,90,0.3);
+  border-left:3px solid var(--gold);
+  border-radius:14px;padding:16px;margin-top:14px;
+}
+.advice-head{
+  font-size:11px;font-weight:700;letter-spacing:0.22em;
+  color:var(--gold-deep);text-transform:uppercase;margin-bottom:8px;
+  display:flex;align-items:center;gap:6px;
+}
+.advice-text{font-size:14px;line-height:1.8;color:var(--ink)}
+
+.lux-footer{
+  text-align:center;margin-top:22px;padding:18px 0;
+  font-family:"Cormorant Garamond",serif;font-style:italic;
+  font-size:12px;color:var(--text-light);letter-spacing:0.15em;
+}
+.lux-footer .ornament{display:block;margin:0 auto 8px;width:60px;height:1px;background:var(--gold);opacity:0.5}
+
+.loader{
+  display:inline-block;width:18px;height:18px;
+  border:2px solid var(--line);
+  border-top-color:var(--gold);
+  border-radius:50%;animation:spin 0.7s linear infinite;
+}
+
+@media (min-width:768px){
+  body{
+    background:
+      radial-gradient(circle at 30% 20%, rgba(184,147,90,0.06), transparent 50%),
+      radial-gradient(circle at 70% 80%, rgba(31,27,58,0.05), transparent 50%),
+      #EFE5D0;
+  }
+  .page{background:transparent;justify-content:center;padding:30px}
+  .phone-shell{
+    width:100%;max-width:540px;
+    background:var(--paper);
+    border-radius:36px;overflow:hidden;
+    border:1px solid var(--line);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.6) inset,
+      0 40px 80px -20px rgba(31,27,58,0.25),
+      0 0 0 1px rgba(184,147,90,0.12);
+    max-height:94vh;display:flex;flex-direction:column;
+  }
+  .phone-content{overflow-y:auto;flex:1}
+  .phone-content::-webkit-scrollbar{width:0}
+  .content{padding:30px 24px 80px}
+}
+
+.texture-overlay{
+  position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='1'/%3E%3CfeColorMatrix values='0 0 0 0 0.7 0 0 0 0 0.6 0 0 0 0 0.4 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity:0.5;mix-blend-mode:multiply;
+}
+
+@media print{
+  .texture-overlay,.no-print{display:none!important}
+  body{background:#fff}
+  .page{background:#fff}
+}
+</style>
+</head>
+<body>
+<div class="texture-overlay"></div>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useMemo } = React;
+
+/* ============== 設定（沿用基礎版架構） ============== */
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbznZaOZDD91ueme98boz8OthigK2xP5Od__-OmD_Y82i10sP9Y6hYgMjv6HVdClFaIf/exec";
+// 進階版專屬 Google Sheet (家長眼中的孩子)
+const TARGET_SHEET_ID  = "10ErbaQwi8Hj9ypL57JExlOwKUzgQG__N3M13mdi1bmY";
+const TARGET_SHEET_URL = "https://docs.google.com/spreadsheets/d/" + TARGET_SHEET_ID + "/edit";
+const QUIZ_VERSION     = "premium-v1.1";
+const IDENTITY_TAG     = "家長眼中的孩子-進階版";
+
+/* ============== 24 題（依使用者指定） ============== */
+const QUESTIONS = [
+  // 紅 1-6 創新探索
+  "孩子喜歡挑戰新的事物。",
+  "孩子經常能想到許多新點子。",
+  "即使可能會失敗，孩子仍勇於嘗試新的做法。",
+  "孩子會用創意的方法來解決問題。",
+  "孩子相信自己的直覺。",
+  "孩子對未知的事物充滿好奇。",
+  // 橙 7-12 共情關懷
+  "孩子能發現朋友的情緒變化。",
+  "孩子願意主動幫助有需要的同學。",
+  "孩子會主動關心身邊的人。",
+  "孩子能站在別人的立場思考。",
+  "孩子很重視朋友之間的信任關係。",
+  "孩子希望每個人都能被接納。",
+  // 綠 13-18 和諧協調
+  "孩子能協助他人解決意見不合的情況。",
+  "孩子在與人互動時會設法理解他們的感受。",
+  "孩子認為每個人都應被公平對待。",
+  "孩子在團體中表現出溫和且友善的態度。",
+  "孩子重視團體成員之間的和諧關係。",
+  "孩子認為團隊合作比個人表現更重要。",
+  // 藍 19-24 邏輯分析
+  "孩子在做決定前會先查好資料。",
+  "孩子喜歡事情有清楚的計畫與步驟。",
+  "孩子經常在交作業前仔細檢查，避免出錯。",
+  "孩子做事之前，會預先思考好每個步驟。",
+  "孩子解決問題時會使用邏輯推理的方式。",
+  "孩子相信數據分析，而不依賴直覺。",
+];
+
+const CATS = [
+  ...Array(6).fill("red"),
+  ...Array(6).fill("orange"),
+  ...Array(6).fill("green"),
+  ...Array(6).fill("blue"),
+];
+
+const OPTIONS = [
+  { label:"非常符合", score:5, mark:"V" },
+  { label:"相當符合", score:4, mark:"IV" },
+  { label:"普通",     score:3, mark:"III" },
+  { label:"不太符合", score:2, mark:"II" },
+  { label:"完全不符合", score:1, mark:"I" },
+];
+
+const AGE_GROUPS = [
+  { key:'0-3',  label:'0–3 歲',  sublabel:'感官期' },
+  { key:'4-6',  label:'4–6 歲',  sublabel:'情緒期' },
+  { key:'7-12', label:'7–12 歲', sublabel:'認同期' },
+  { key:'teen', label:'青少年',   sublabel:'自主期' },
+];
+
+const TYPE_INFO = {
+  red: {
+    name:"紅色・創新探索型",
+    eyebrow:"The Pioneer",
+    title:"「點燃星火的小探險家」",
+    tags:["勇於嘗試","創意豐沛","直覺敏銳","熱愛挑戰"],
+    desc:"孩子是天生的<strong>探險家</strong>，眼裡永遠閃著對世界的好奇。他不害怕失敗，因為失敗只是他學會更多的方式之一。他相信自己的直覺，也樂於嘗試別人還沒做過的事。",
+    advice:"請保留他探索的空間，少一些「先想清楚再做」，多一些「我相信你可以試試看」。給他舞台，他會自己學會如何掌握火光。",
+    barC1:"#D9523F", barC2:"#B83A2E",
+    color:"#B83A2E", colorD:"#7E2118", colorP:"#FBEEEB",
+    glow:"rgba(184,58,46,0.10)",
+  },
+  orange: {
+    name:"橙色・共情關懷型",
+    eyebrow:"The Empath",
+    title:"「溫柔的共情天使」",
+    tags:["情感敏銳","樂於助人","重視關係","溫柔包容"],
+    desc:"孩子有一雙<strong>能讀懂他人情緒的眼睛</strong>。他在人群中是那道溫柔的光——朋友難過時他會察覺，需要被幫助時他會主動伸手。他把「關係」與「被接納」看得比成績還重要。",
+    advice:"請肯定他的溫柔不是軟弱，而是力量。也別忘了提醒他：在照顧別人之前，要先學會接住自己的情緒。",
+    barC1:"#E0823F", barC2:"#C66416",
+    color:"#C66416", colorD:"#8C420A", colorP:"#FBF0E2",
+    glow:"rgba(198,100,22,0.10)",
+  },
+  green: {
+    name:"綠色・和諧協調型",
+    eyebrow:"The Harmonizer",
+    title:"「家庭與團體的定海神針」",
+    tags:["重視和諧","公平公正","協調能力","團隊精神"],
+    desc:"孩子是團體裡的<strong>潤滑劑與定錨</strong>。他厭惡衝突、嚮往公平，能站在不同角度理解每個人。他相信「一起完成」比「自己拿第一」更有意義。",
+    advice:"請鼓勵他在重視和諧的同時，也勇敢說出自己的需要。穩定不等於沉默——讓他知道，表達主張也是一種愛。",
+    barC1:"#48A271", barC2:"#2E7A4D",
+    color:"#2E7A4D", colorD:"#1A5232", colorP:"#E8F2EB",
+    glow:"rgba(46,122,77,0.10)",
+  },
+  blue: {
+    name:"藍色・邏輯分析型",
+    eyebrow:"The Architect",
+    title:"「精密思考的觀察者」",
+    tags:["邏輯縝密","重視計畫","注重細節","理性嚴謹"],
+    desc:"孩子是天生的<strong>系統思考者</strong>。他做事前會反覆推演，凡事都希望有清楚的步驟與依據。他相信數據與邏輯，但這不代表他冷淡——他只是用「準確」來表達在乎。",
+    advice:"請給他時間思考，不必每件事都要他立刻反應。同時，偶爾用一句不需理由的「我以你為傲」打破他的邏輯防線——孩子需要知道，不完美也值得被愛。",
+    barC1:"#4A7FB8", barC2:"#2C5C8E",
+    color:"#2C5C8E", colorD:"#173E66", colorP:"#E7EEF7",
+    glow:"rgba(44,92,142,0.10)",
+  },
+};
+
+const ORDER = ["red","orange","green","blue"];
+
+const validPhone = p => /^09\d{8}$/.test(p);
+const validEmail = e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+
+/* ============== Shell ============== */
+function Shell({children}) {
+  const [isDesktop, setIsDesktop] = useState(typeof window!=='undefined' && window.innerWidth>=768);
+  useEffect(()=>{
+    const fn = ()=>setIsDesktop(window.innerWidth>=768);
+    window.addEventListener('resize',fn);
+    return ()=>window.removeEventListener('resize',fn);
+  },[]);
+  if(!isDesktop) return <div className="page fade-in">{children}</div>;
+  return (
+    <div className="page">
+      <div className="phone-shell">
+        <div className="phone-content">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+function LuxHeader({subtitle}){
+  return (
+    <div className="lux-header">
+      <div className="lux-strip"></div>
+      <div className="lux-eyebrow">Mind Spectrum<span className="dot"></span>Premium</div>
+      <h1 className="lux-title">心智光譜測驗</h1>
+      <div className="lux-subtitle">{subtitle || "家長眼中的孩子・進階版"}</div>
+      <div className="lux-divider">
+        <span className="line"></span>
+        <span className="diamond"></span>
+        <span className="line"></span>
+      </div>
+    </div>
+  );
+}
+
+/* ============== 1. 首頁 ============== */
+function Home({onStart}){
+  return (
+    <Shell>
+      <LuxHeader/>
+      <div className="content">
+        <div className="card gold-edge fade-up">
+          <div className="q-tag"><span className="bullet"></span>About this assessment</div>
+          <p style={{fontSize:14.5,lineHeight:1.9,color:'var(--text)',marginBottom:16}}>
+            這份測驗將透過 24 道精心設計的觀察題，幫助你看見孩子在
+            <strong style={{color:'var(--c-red)'}}>創新探索</strong>、
+            <strong style={{color:'var(--c-orange)'}}>共情關懷</strong>、
+            <strong style={{color:'var(--c-green)'}}>和諧協調</strong>、
+            <strong style={{color:'var(--c-blue)'}}>邏輯分析</strong>
+            四種特質光譜上的獨特位置。
+          </p>
+          <p style={{fontSize:13.5,lineHeight:1.8,color:'var(--text-mid)'}}>
+            每個孩子都是獨一無二的色彩組合。這不是一份分類，而是一面鏡子——
+            幫助你以更細緻的眼光，看見孩子最自然的樣子。
+          </p>
+        </div>
+
+        <div className="card fade-up" style={{animationDelay:'0.1s',padding:'18px 22px'}}>
+          <div style={{display:'flex',gap:14,alignItems:'center'}}>
+            <div style={{
+              width:42,height:42,borderRadius:'50%',
+              background:'var(--gold-pale)',
+              display:'flex',alignItems:'center',justifyContent:'center',
+              color:'var(--gold-deep)',fontFamily:'"Cormorant Garamond",serif',
+              fontSize:20,fontStyle:'italic',fontWeight:600,
+              border:'1px solid rgba(184,147,90,0.3)',flexShrink:0,
+            }}>I</div>
+            <div>
+              <div style={{fontSize:13,fontWeight:700,color:'var(--ink)',marginBottom:2}}>填答方式</div>
+              <div style={{fontSize:13,color:'var(--text-mid)',lineHeight:1.6}}>從 5 個選項中，選出最符合你觀察到的孩子的描述</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="card fade-up" style={{animationDelay:'0.2s',padding:'18px 22px',marginBottom:22}}>
+          <div style={{display:'flex',gap:14,alignItems:'center'}}>
+            <div style={{
+              width:42,height:42,borderRadius:'50%',
+              background:'var(--gold-pale)',
+              display:'flex',alignItems:'center',justifyContent:'center',
+              color:'var(--gold-deep)',fontFamily:'"Cormorant Garamond",serif',
+              fontSize:20,fontStyle:'italic',fontWeight:600,
+              border:'1px solid rgba(184,147,90,0.3)',flexShrink:0,
+            }}>II</div>
+            <div>
+              <div style={{fontSize:13,fontWeight:700,color:'var(--ink)',marginBottom:2}}>所需時間</div>
+              <div style={{fontSize:13,color:'var(--text-mid)',lineHeight:1.6}}>約 5–7 分鐘・誠實作答能獲得更精準的結果</div>
+            </div>
+          </div>
+        </div>
+
+        <button className="btn-primary fade-up" style={{animationDelay:'0.3s'}} onClick={onStart}>
+          開始測驗
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          <span className="gold-line"></span>
+        </button>
+
+        <div className="lux-footer">
+          <span className="ornament"></span>
+          ZWAY EDUCATION × MIND SPECTRUM
+          <div style={{marginTop:6,fontSize:11,letterSpacing:'0.1em',fontStyle:'normal',fontFamily:'"Noto Sans TC",sans-serif'}}>
+            Premium Edition · {QUIZ_VERSION}
+          </div>
+        </div>
+      </div>
+    </Shell>
+  );
+}
+
+/* ============== 2. 註冊頁 ============== */
+function Register({form, setForm, onNext, onBack}){
+  const [err, setErr] = useState({});
+
+  const submit = (e)=>{
+    e.preventDefault();
+    const ne = {};
+    if(!form.name.trim()) ne.name = '請填寫您的姓名';
+    if(!form.email.trim() || !validEmail(form.email)) ne.email = '請填寫正確的 Email 格式';
+    if(!form.phone || !validPhone(form.phone)) ne.phone = '請填寫正確的手機號碼（如 0912345678）';
+    setErr(ne);
+    if(Object.keys(ne).length===0) onNext();
+  };
+
+  return (
+    <Shell>
+      <LuxHeader/>
+      <div className="content">
+        <div className="card gold-edge fade-up">
+          <div className="q-tag"><span className="bullet"></span>Begin the journey</div>
+          <p style={{fontSize:14,lineHeight:1.85,color:'var(--text-mid)'}}>
+            請留下基本資料，以便將孩子的<strong style={{color:'var(--ink)'}}>專屬光譜分析報告</strong>寄送給您。我們重視您的隱私，所有資料皆嚴格保密。
+          </p>
+        </div>
+
+        <div className="card fade-up" style={{animationDelay:'0.1s'}}>
+          <form onSubmit={submit} noValidate>
+            {/* honeypot */}
+            <div style={{position:'absolute',opacity:0,height:0,overflow:'hidden'}}>
+              <input tabIndex="-1" autoComplete="off" value={form.bot} onChange={e=>setForm({...form,bot:e.target.value})}/>
+            </div>
+
+            <div className="form-row">
+              <label className="form-label">您的姓名<span className="req">*</span></label>
+              <div className="input-wrap">
+                <span className="input-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </span>
+                <input type="text" className="input-field" placeholder="例如：王小明"
+                  value={form.name} onChange={e=>setForm({...form,name:e.target.value})}/>
+              </div>
+              {err.name && <div className="error-msg">{err.name}</div>}
+            </div>
+
+            <div className="form-row">
+              <label className="form-label">電子郵件<span className="req">*</span></label>
+              <div className="input-wrap">
+                <span className="input-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                </span>
+                <input type="email" className="input-field" placeholder="example@mail.com"
+                  value={form.email} onChange={e=>setForm({...form,email:e.target.value})}/>
+              </div>
+              {err.email && <div className="error-msg">{err.email}</div>}
+            </div>
+
+            <div className="form-row">
+              <label className="form-label">聯繫電話<span className="req">*</span></label>
+              <div className="input-wrap">
+                <span className="input-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                </span>
+                <input type="tel" className="input-field" placeholder="0912345678" maxLength="10"
+                  value={form.phone} onChange={e=>setForm({...form,phone:e.target.value.replace(/\D/g,'').slice(0,10)})}/>
+              </div>
+              {err.phone && <div className="error-msg">{err.phone}</div>}
+            </div>
+
+            <div className="form-row" style={{marginBottom:22}}>
+              <label className="form-label">孩子的年齡<span className="opt">（選填）</span></label>
+              <div className="age-grid">
+                {AGE_GROUPS.map(ag=>{
+                  const sel = form.childAge === ag.key;
+                  return (
+                    <button key={ag.key} type="button"
+                      className={"age-btn"+(sel?" sel":"")}
+                      onClick={()=>setForm({...form, childAge: sel ? null : ag.key})}>
+                      <div className="age-label">{ag.label}</div>
+                      <div className="age-sub">{ag.sublabel}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <button type="submit" className="btn-primary">
+              開始測驗
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+              <span className="gold-line"></span>
+            </button>
+
+            <p style={{fontSize:11,color:'var(--text-light)',textAlign:'center',marginTop:14,lineHeight:1.7,letterSpacing:'0.02em'}}>
+              您的資料僅用於寄送測驗結果與相關教養資訊，<br/>不會提供予第三方，亦不作其他商業用途。
+            </p>
+          </form>
+        </div>
+
+        <button className="btn-ghost" onClick={onBack} style={{marginTop:8}}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="m15 18-6-6 6-6"/></svg>
+          返回首頁
+        </button>
+      </div>
+    </Shell>
+  );
+}
+
+/* ============== 3. 答題頁 ============== */
+function Quiz({answers, setAnswers, onFinish, onBack}){
+  const startIdx = useMemo(()=>{
+    const i = answers.findIndex(a=>a===null);
+    return i === -1 ? 0 : Math.max(0,i);
+  },[]);
+  const [qIdx, setQIdx] = useState(startIdx);
+  const [direction, setDirection] = useState('forward');
+
+  const q = QUESTIONS[qIdx];
+  const cat = CATS[qIdx];
+  const info = TYPE_INFO[cat];
+  const progress = Math.round(((qIdx+1)/QUESTIONS.length)*100);
+
+  const choose = (score)=>{
+    const next = [...answers];
+    next[qIdx] = score;
+    setAnswers(next);
+    if(qIdx<QUESTIONS.length-1){
+      setDirection('forward');
+      setTimeout(()=>setQIdx(qIdx+1),120);
+    } else {
+      setTimeout(()=>onFinish(next),200);
+    }
+  };
+
+  const back = ()=>{
+    if(qIdx>0){ setDirection('back'); setQIdx(qIdx-1); }
+    else { onBack && onBack(); }
+  };
+
+  const qNum = String(qIdx+1).padStart(2,'0');
+
+  return (
+    <Shell>
+      <div className="content" key={qIdx}>
+        <div className="progress-wrap">
+          <button onClick={back} style={{
+            background:'transparent',border:'none',cursor:'pointer',
+            color:'var(--text-mid)',padding:'4px 8px',
+          }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <span className="progress-meta">{qNum} / 24</span>
+          <div className="progress-track">
+            <div className="progress-fill" style={{width:`${progress}%`}}></div>
+          </div>
+        </div>
+
+        <div className={"card gold-edge "+(direction==='forward'?'slide-in':'slide-out')} style={{position:'relative',padding:'28px 24px 22px',minHeight:170}}>
+          <div className="q-num">{qNum}</div>
+          <div className="q-tag" style={{color:info.colorD}}>
+            <span className="bullet" style={{background:info.color}}></span>
+            觀察向度：{info.name.split('・')[1]}
+          </div>
+          <div className="q-text">{q}</div>
+        </div>
+
+        <div style={{marginTop:14}}>
+          {OPTIONS.map((opt,i)=>(
+            <button
+              key={i}
+              className={`opt opt-${opt.score} fade-up`}
+              style={{animationDelay:`${0.04*i}s`}}
+              onClick={()=>choose(opt.score)}
+            >
+              <span className="opt-label">{opt.label}</span>
+              <span className="opt-mark">{opt.mark}</span>
+            </button>
+          ))}
+        </div>
+
+        <div style={{textAlign:'center',marginTop:20,fontSize:12,color:'var(--text-light)',letterSpacing:'0.1em'}}>
+          {qIdx===QUESTIONS.length-1 ? '— 最後一題 —' : `還剩 ${QUESTIONS.length-qIdx-1} 題`}
+        </div>
+      </div>
+    </Shell>
+  );
+}
+
+/* ============== 計算分數 ============== */
+function calcResult(answers){
+  const sum = {red:0, orange:0, green:0, blue:0};
+  answers.forEach((s,i)=>{ if(s) sum[CATS[i]] += s; });
+  let primary = "red", maxV=-1;
+  ORDER.forEach(k=>{ if(sum[k]>maxV){maxV=sum[k]; primary=k;} });
+  return { sum, primary };
+}
+
+/* ============== 4. 結果頁 ============== */
+function Result({form, answers, onRestart, submitState, onUpload}){
+  const { sum, primary } = useMemo(()=>calcResult(answers),[answers]);
+  const info = TYPE_INFO[primary];
+  const [showBars, setShowBars] = useState(false);
+
+  useEffect(()=>{
+    const t = setTimeout(()=>setShowBars(true),250);
+    return ()=>clearTimeout(t);
+  },[]);
+
+  const totalScore = sum.red + sum.orange + sum.green + sum.blue;
+  const uploading = submitState==='sending';
+  const uploaded  = submitState==='ok';
+  const failed    = submitState==='fail';
+
+  return (
+    <Shell>
+      <div className="content scale-in">
+        {/* Cover */}
+        <div className="result-cover" style={{'--accent-glow':info.glow}}>
+          <div className="result-eyebrow">{info.eyebrow}</div>
+          <div className="result-color-name" style={{color:info.colorD}}>{info.name}</div>
+          <div className="result-title">{info.title}</div>
+          <div className="result-tag-row">
+            {info.tags.map((t,i)=>(
+              <span key={i} className="result-tag" style={{borderColor:info.color+'33',color:info.colorD}}>
+                <span style={{width:5,height:5,borderRadius:'50%',background:info.color}}></span>
+                {t}
+              </span>
+            ))}
+          </div>
+          {form.name && (
+            <div style={{
+              marginTop:18,paddingTop:14,borderTop:'1px dashed rgba(184,147,90,0.4)',
+              fontSize:12,color:'var(--text-mid)',letterSpacing:'0.05em',position:'relative',zIndex:1,
+            }}>
+              <span style={{fontFamily:'"Cormorant Garamond",serif',fontStyle:'italic',color:'var(--gold-deep)',marginRight:6}}>
+                Observed by
+              </span>
+              <strong style={{color:'var(--ink)'}}>{form.name}</strong>
+            </div>
+          )}
+        </div>
+
+
+        {/* Spectrum bars */}
+        <div className="card gold-edge">
+          <div className="q-tag" style={{marginBottom:16}}>
+            <span className="bullet"></span>
+            孩子的四色光譜分布
+          </div>
+          {ORDER.map(k=>{
+            const t = TYPE_INFO[k];
+            const score = sum[k];
+            return (
+              <div key={k} className="bar-row" style={{'--bar-c1':t.barC1,'--bar-c2':t.barC2}}>
+                <div className="bar-head">
+                  <span className="bar-name" style={{color:t.colorD}}>
+                    <span className="bar-dot" style={{background:t.color}}></span>
+                    {t.name.split('・')[1]}
+                  </span>
+                  <span className="bar-score">
+                    {score}<span className="max"> / 30</span>
+                  </span>
+                </div>
+                <div className="bar-track">
+                  <div className="bar-fill" style={{width: showBars ? `${(score/30)*100}%` : '0%'}}></div>
+                </div>
+              </div>
+            );
+          })}
+          <div style={{textAlign:'center',marginTop:12,fontSize:12,color:'var(--text-light)',letterSpacing:'0.1em',fontStyle:'italic',fontFamily:'"Cormorant Garamond",serif'}}>
+            — Each child is a unique blend of all four —
+          </div>
+        </div>
+
+        {/* Description */}
+        <div className="desc-block">
+          <div className="desc-head">特質深度解讀</div>
+          <div className="desc-text" dangerouslySetInnerHTML={{__html: info.desc}}></div>
+          <div className="advice">
+            <div className="advice-head">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill={info.color} stroke="none">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+              給家長的建議
+            </div>
+            <div className="advice-text">{info.advice}</div>
+          </div>
+        </div>
+
+        {/* Other dimensions */}
+        <div className="card">
+          <div className="q-tag" style={{marginBottom:12}}>
+            <span className="bullet"></span>
+            其他三個面向，孩子也擁有...
+          </div>
+          {ORDER.filter(k=>k!==primary)
+            .sort((a,b)=>sum[b]-sum[a])
+            .map(k=>{
+              const t = TYPE_INFO[k];
+              return (
+                <div key={k} style={{
+                  display:'flex',gap:12,padding:'12px 0',
+                  borderBottom:'1px dashed var(--line)',
+                }}>
+                  <span style={{
+                    width:28,height:28,borderRadius:'50%',background:t.colorP,
+                    border:`1px solid ${t.color}33`,flexShrink:0,
+                    display:'flex',alignItems:'center',justifyContent:'center',
+                  }}>
+                    <span style={{width:10,height:10,borderRadius:'50%',background:t.color}}></span>
+                  </span>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:13,fontWeight:700,color:t.colorD,marginBottom:3}}>
+                      {t.name.split('・')[1]}
+                      <span style={{fontFamily:'"Cormorant Garamond",serif',fontStyle:'italic',fontSize:13,color:'var(--text-light)',marginLeft:8,fontWeight:600}}>{sum[k]} pts</span>
+                    </div>
+                    <div style={{fontSize:12.5,color:'var(--text-mid)',lineHeight:1.7}}>
+                      {t.tags.slice(0,3).join('・')}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          <div style={{
+            fontSize:12.5,color:'var(--text-mid)',lineHeight:1.8,
+            padding:'12px 0 2px',fontStyle:'italic',
+          }}>
+            孩子並非被某一個顏色定義，而是由這四種特質以不同比例調和而成。
+            這份光譜會隨著年齡、環境而流動——它是孩子當下最真實的樣子。
+          </div>
+        </div>
+
+        {/* ★ 一鍵上傳資料到 Google Sheet ★ */}
+        <div className="card no-print" style={{
+          padding:'18px 20px',marginTop:14,marginBottom:14,
+          background: uploaded ? 'var(--c-green-p)' : (failed ? 'var(--c-red-p)' : 'var(--cream)'),
+          borderColor: uploaded ? 'rgba(46,122,77,0.3)' : (failed ? 'rgba(184,58,46,0.3)' : 'var(--line)'),
+          borderLeft:'3px solid '+(uploaded?'var(--c-green)':(failed?'var(--c-red)':'var(--gold)')),
+        }}>
+          <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
+            {uploading && <span className="loader"/>}
+            {uploaded && <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--c-green-d)" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>}
+            {failed && <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--c-red-d)" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>}
+            {submitState==='idle' && <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold-deep)" strokeWidth="2.2" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>}
+            <div style={{flex:1}}>
+              <div style={{fontSize:13,fontWeight:800,color:'var(--ink)',letterSpacing:'0.05em'}}>
+                {uploading && '正在上傳至雲端...'}
+                {uploaded && '資料已成功上傳'}
+                {failed && '上傳失敗，請點擊重試'}
+                {submitState==='idle' && '資料尚未上傳'}
+              </div>
+              <div style={{fontSize:11.5,color:'var(--text-mid)',marginTop:3,letterSpacing:'0.03em'}}>
+                {uploaded ? `分析報告將寄至 ${form.email}` : '一鍵將測驗結果上傳至專屬資料庫'}
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={onUpload}
+            disabled={uploading||uploaded}
+            style={{
+              width:'100%',
+              background: uploaded ? 'var(--c-green)' : (failed ? 'var(--c-red)' : 'linear-gradient(135deg, var(--gold) 0%, var(--gold-deep) 100%)'),
+              color:'#fff',border:'none',borderRadius:12,padding:'13px',
+              fontSize:14,fontWeight:700,letterSpacing:'0.1em',
+              cursor: (uploading||uploaded) ? 'not-allowed' : 'pointer',
+              opacity: (uploading||uploaded) ? 0.7 : 1,
+              display:'flex',alignItems:'center',justifyContent:'center',gap:8,
+              boxShadow: uploaded ? 'none' : '0 6px 16px -6px rgba(184,147,90,0.4)',
+              transition:'all 0.2s',
+            }}>
+            {uploading && <><span className="loader" style={{borderTopColor:'#fff'}}/> 上傳中...</>}
+            {uploaded && <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg> 已完成上傳</>}
+            {failed && <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 3v6h6"/></svg> 重新上傳</>}
+            {submitState==='idle' && <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> 一鍵上傳</>}
+          </button>
+        </div>
+
+        {/* Action buttons */}
+        <button className="btn-primary no-print" style={{marginTop:0}} onClick={onRestart}>
+          重新測驗
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 3v6h6"/></svg>
+          <span className="gold-line"></span>
+        </button>
+
+        <div className="no-print" style={{display:'flex',gap:10,marginTop:10}}>
+          <button className="btn-ghost" style={{flex:1}} onClick={()=>{
+            const text = `${form.name?form.name+'家':'我家'}的孩子，是「${info.name}」——${info.title}`;
+            if(navigator.share){
+              navigator.share({title:'心智光譜測驗・進階版',text,url:location.href}).catch(()=>{});
+            } else {
+              navigator.clipboard.writeText(text+' '+location.href);
+              alert('結果已複製到剪貼簿');
+            }
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+            分享結果
+          </button>
+          <button className="btn-ghost" style={{flex:1}} onClick={()=>window.print()}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+            列印保存
+          </button>
+        </div>
+
+        <div className="lux-footer">
+          <span className="ornament"></span>
+          ZWAY EDUCATION × MIND SPECTRUM
+          <div style={{marginTop:6,fontSize:11,letterSpacing:'0.1em',fontStyle:'normal',fontFamily:'"Noto Sans TC",sans-serif'}}>
+            Premium Edition · {QUIZ_VERSION}
+          </div>
+        </div>
+      </div>
+    </Shell>
+  );
+}
+
+/* ============== 主應用（架構參考基礎版） ============== */
+function App(){
+  const [step, setStep]   = useState('home'); // home | register | quiz | result
+  const [form, setForm]   = useState({ name:'', email:'', phone:'', childAge:null, bot:'' });
+  const [answers, setAnswers] = useState(Array(QUESTIONS.length).fill(null));
+  const [uid] = useState(()=>'p_'+Math.random().toString(36).slice(2,9));
+  const [submitState, setSubmitState] = useState('idle'); // idle | sending | ok | fail
+
+  /* 沿用基礎版提交邏輯：fetch + no-cors + JSON */
+  const submitToSheet = async (finalAnswers)=>{
+    const { sum, primary } = calcResult(finalAnswers);
+    const totalScore = sum.red + sum.orange + sum.green + sum.blue;
+    const sheetData = {
+      nickname: form.name,
+      identity: IDENTITY_TAG,
+      email: form.email,
+      phone: form.phone,
+      childAge: form.childAge || '無',
+      session: '無',
+      parentCheck: '已確認',
+      totalScore,
+      red: sum.red, orange: sum.orange, green: sum.green, blue: sum.blue,
+      primaryType: primary,
+      primaryLabel: TYPE_INFO[primary].name,
+      answers: finalAnswers.reduce((acc,v,i)=>{ acc[i+1]=v; return acc; },{}),
+      uid,
+      sheetId: TARGET_SHEET_ID,
+      sheetUrl: TARGET_SHEET_URL,
+      version: QUIZ_VERSION,
+      submittedAt: new Date().toISOString()
+    };
+    setSubmitState('sending');
+    try {
+      const submitPromise = fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(sheetData)
+      });
+      const timeoutPromise = new Promise(r=>setTimeout(()=>r('timeout'),3500));
+      await Promise.race([submitPromise, timeoutPromise]);
+      setSubmitState('ok');
+    } catch(e) {
+      console.error('Submit failed:', e);
+      setSubmitState('fail');
+    }
+  };
+
+  if(step==='home'){
+    return <Home onStart={()=>setStep('register')}/>;
+  }
+  if(step==='register'){
+    return <Register form={form} setForm={setForm}
+      onNext={()=>setStep('quiz')}
+      onBack={()=>setStep('home')}/>;
+  }
+  if(step==='quiz'){
+    return <Quiz
+      answers={answers}
+      setAnswers={setAnswers}
+      onBack={()=>setStep('register')}
+      onFinish={(final)=>{
+        setAnswers(final);
+        setStep('result');
+        window.scrollTo(0,0);
+        submitToSheet(final);
+      }}
+    />;
+  }
+  return <Result form={form} answers={answers} submitState={submitState}
+    onUpload={()=>submitToSheet(answers)}
+    onRestart={()=>{
+      setAnswers(Array(QUESTIONS.length).fill(null));
+      setForm({ name:'', email:'', phone:'', childAge:null, bot:'' });
+      setSubmitState('idle');
+      setStep('home');
+      window.scrollTo(0,0);
+    }}/>;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
