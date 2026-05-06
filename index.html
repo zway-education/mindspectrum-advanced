@@ -1,4 +1,4 @@
-<!-- 心智光譜測驗 進階版・家長眼中的孩子 v1.1 -->
+<!-- 心智光譜測驗 進階版・家長眼中的孩子 v1.3 (useRef 鎖防重送 + 工程師模式同鎖) -->
 <!-- 參考基礎版 index.html 架構：home → register → quiz → result，附帶 lookup 與資料回送 Google Sheet -->
 <!DOCTYPE html>
 <html lang="zh-TW">
@@ -490,14 +490,14 @@ input,textarea{-webkit-user-select:auto;user-select:auto}
 <div id="root"></div>
 
 <script type="text/babel">
-const { useState, useEffect, useMemo } = React;
+const { useState, useEffect, useMemo, useRef } = React;
 
 /* ============== 設定（沿用基礎版架構） ============== */
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhCGgoAsRmctLY30DDo6_WwXwN2T5Gedd-kLsZ38AeCgCTsdaswiq8fgUlVXSl_Rpy/exec";
 // 進階版專屬 Google Sheet (家長眼中的孩子)
 const TARGET_SHEET_ID  = "10ErbaQwi8Hj9ypL57JExlOwKUzgQG__N3M13mdi1bmY";
 const TARGET_SHEET_URL = "https://docs.google.com/spreadsheets/d/" + TARGET_SHEET_ID + "/edit";
-const QUIZ_VERSION     = "premium-v1.1";
+const QUIZ_VERSION     = "premium-v1.3";
 const IDENTITY_TAG     = "家長眼中的孩子-進階版";
 // 連結到原版心智光譜測驗（家長版／自身底色）
 const MAIN_QUIZ_URL    = "https://zway-education.github.io/mindspectrum/";
@@ -1255,14 +1255,20 @@ function App(){
   const [uid] = useState(()=>'p_'+Math.random().toString(36).slice(2,9));
   const [submitState, setSubmitState] = useState('idle'); // idle | sending | ok | fail
 
+  // ⭐ v1.3：用 useRef 鎖防重送（同步、不受 React state 排程影響）
+  // React state 更新是非同步的，rapid 連續呼叫時 submitState 還是舊值，
+  // 會導致 guard 失效。useRef 同步，第一次設 true 後立刻擋住所有後續呼叫。
+  const submittedRef = useRef(false);
+
   /* 沿用基礎版提交邏輯：fetch + no-cors + JSON
-     v1.2 加入防重送：避免 onFinish 自動觸發 + 結果頁手動點上傳 兩次都送 */
+     v1.3 防重送：useRef 同步鎖，保證 onFinish 自動觸發 + 結果頁手動點上傳 只送一次 */
   const submitToSheet = async (finalAnswers)=>{
-    // ⭐ 防重送：若已送出或送出中，直接 return
-    if (submitState === 'sending' || submitState === 'ok') {
-      console.log('[submitToSheet] 已送出過，跳過重複呼叫');
+    // ⭐ 防重送：useRef 同步檢查
+    if (submittedRef.current) {
+      console.log('[submitToSheet] 已送出過，跳過重複呼叫 (ref guard)');
       return;
     }
+    submittedRef.current = true;  // 立刻上鎖
     setSubmitState('sending');
 
     const { sum, primary } = calcResult(finalAnswers);
@@ -1341,6 +1347,9 @@ function App(){
             version: QUIZ_VERSION+' [engineer]',
             submittedAt: new Date().toISOString(),
           };
+          // ⭐ 工程師模式也加 ref 鎖，避免結果頁再點上傳重送
+          if (submittedRef.current) return;
+          submittedRef.current = true;
           setSubmitState('sending');
           fetch(GOOGLE_SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(sheetData)})
             .then(()=>setSubmitState('ok')).catch(()=>setSubmitState('fail'));
@@ -1366,6 +1375,7 @@ function App(){
       setAnswers(Array(QUESTIONS.length).fill(null));
       setForm({ name:'', email:'', phone:'', childAge:null, bot:'' });
       setSubmitState('idle');
+      submittedRef.current = false;  // ⭐ 重啟時清空鎖，下一次可以重新送出
       setStep('home');
       window.scrollTo(0,0);
     }}/>;
