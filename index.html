@@ -493,7 +493,7 @@ input,textarea{-webkit-user-select:auto;user-select:auto}
 const { useState, useEffect, useMemo } = React;
 
 /* ============== 設定（沿用基礎版架構） ============== */
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbznZaOZDD91ueme98boz8OthigK2xP5Od__-OmD_Y82i10sP9Y6hYgMjv6HVdClFaIf/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhCGgoAsRmctLY30DDo6_WwXwN2T5Gedd-kLsZ38AeCgCTsdaswiq8fgUlVXSl_Rpy/exec";
 // 進階版專屬 Google Sheet (家長眼中的孩子)
 const TARGET_SHEET_ID  = "10ErbaQwi8Hj9ypL57JExlOwKUzgQG__N3M13mdi1bmY";
 const TARGET_SHEET_URL = "https://docs.google.com/spreadsheets/d/" + TARGET_SHEET_ID + "/edit";
@@ -1255,8 +1255,16 @@ function App(){
   const [uid] = useState(()=>'p_'+Math.random().toString(36).slice(2,9));
   const [submitState, setSubmitState] = useState('idle'); // idle | sending | ok | fail
 
-  /* 沿用基礎版提交邏輯：fetch + no-cors + JSON */
+  /* 沿用基礎版提交邏輯：fetch + no-cors + JSON
+     v1.2 加入防重送：避免 onFinish 自動觸發 + 結果頁手動點上傳 兩次都送 */
   const submitToSheet = async (finalAnswers)=>{
+    // ⭐ 防重送：若已送出或送出中，直接 return
+    if (submitState === 'sending' || submitState === 'ok') {
+      console.log('[submitToSheet] 已送出過，跳過重複呼叫');
+      return;
+    }
+    setSubmitState('sending');
+
     const { sum, primary } = calcResult(finalAnswers);
     const totalScore = sum.red + sum.orange + sum.green + sum.blue;
     const sheetData = {
@@ -1278,7 +1286,7 @@ function App(){
       version: QUIZ_VERSION,
       submittedAt: new Date().toISOString()
     };
-    setSubmitState('sending');
+    // setSubmitState('sending') 已在開頭呼叫過
     try {
       const submitPromise = fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
