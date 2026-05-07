@@ -1,4 +1,4 @@
-<!-- 心智光譜測驗 進階版・家長眼中的孩子 v1.3 (useRef 鎖防重送 + 工程師模式同鎖) -->
+<!-- 心智光譜測驗 進階版・家長眼中的孩子 v1.4 (移除 Section 標籤避免使用者預判分組偏答) -->
 <!-- 參考基礎版 index.html 架構：home → register → quiz → result，附帶 lookup 與資料回送 Google Sheet -->
 <!DOCTYPE html>
 <html lang="zh-TW">
@@ -497,7 +497,7 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhCGgoAsRmct
 // 進階版專屬 Google Sheet (家長眼中的孩子)
 const TARGET_SHEET_ID  = "10ErbaQwi8Hj9ypL57JExlOwKUzgQG__N3M13mdi1bmY";
 const TARGET_SHEET_URL = "https://docs.google.com/spreadsheets/d/" + TARGET_SHEET_ID + "/edit";
-const QUIZ_VERSION     = "premium-v1.3";
+const QUIZ_VERSION     = "premium-v1.4";
 const IDENTITY_TAG     = "家長眼中的孩子-進階版";
 // 連結到原版心智光譜測驗（家長版／自身底色）
 const MAIN_QUIZ_URL    = "https://zway-education.github.io/mindspectrum/";
@@ -933,7 +933,7 @@ function Quiz({answers, setAnswers, onFinish, onBack}){
           <div className="q-num">{qNum}</div>
           <div className="q-tag">
             <span className="bullet"></span>
-            Section {['I','II','III','IV'][Math.floor(qIdx/6)]} · 第 {qIdx+1} 題
+            第 {qIdx+1} 題
           </div>
           <div className="q-text">{q}</div>
         </div>
